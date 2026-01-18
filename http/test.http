@@ -1,0 +1,14 @@
+@host = localhost:3020
+
+###
+GET {{host}}/
+###
+GET {{host}}/foo?foo=bar
+###
+GET {{host}}/foo/bar
+###
+GET {{host}}/res?value=3
+###
+GET {{host}}/res?value=1
+###
+GET {{host}}/res?value=2
