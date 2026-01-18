@@ -5,7 +5,9 @@ GET {{host}}/
 ###
 GET {{host}}/foo?foo=bar
 ###
-GET {{host}}/foo/bar
+GET {{host}}/foo/bar?value=7
+###
+GET {{host}}/foo/bar?value=1
 ###
 GET {{host}}/res?value=3
 ###

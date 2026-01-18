@@ -18,15 +18,19 @@ pub enum Error {
 
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
-        let (status, msg) = match self {
-            Error::NotFound(msg) => (StatusCode::NOT_FOUND, msg),
-            Error::BadRequest(msg) => (StatusCode::BAD_REQUEST, msg),
+        let (status, code, msg) = match self {
+            Error::NotFound(msg) => (StatusCode::NOT_FOUND, 404, msg),
+            Error::BadRequest(msg) => (StatusCode::BAD_REQUEST, 400, msg),
             Error::InternalError(ref err) => {
                 println!("internal error {:?}", err);
-                (StatusCode::INTERNAL_SERVER_ERROR, "Internal Server Error".to_string())
+                (StatusCode::INTERNAL_SERVER_ERROR, 500, "Internal Server Error".to_string())
             }
         };
-        let body = Json(json!({"error": msg}));
+        let body = Json(json!({
+            "code": code,
+            "data": null,
+            "msg": msg
+        }));
         (status, body).into_response()
     }
 }

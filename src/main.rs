@@ -1,11 +1,13 @@
 mod error;
+mod response;
 
 use axum::extract::Query;
 use axum::{Router, response::IntoResponse, routing::get};
 use std::collections::HashMap;
 use anyhow::anyhow;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use crate::error::{Error, Result};
+use crate::response::Resp;
 
 #[tokio::main]
 async fn main() {
@@ -36,6 +38,12 @@ impl IntoResponse for CustomResp {
     }
 }
 
+#[derive(Serialize)]
+struct Foo {
+    id: u8,
+    name: String,
+}
+
 
 // which calls one of these handlers
 async fn root() -> &'static str {
@@ -47,8 +55,12 @@ async fn get_foo(Query(params): Query<HashMap<String, String>>) -> &'static str 
 }
 async fn post_foo() {}
 
-async fn foo_bar() -> CustomResp {
-    CustomResp
+async fn foo_bar(Query(param): Query<ResParam>) -> Result<Resp<Foo>> {
+    let foo = Foo { id: 1, name: "bar".to_string() };
+    if param.value < 5 {
+        return Err(Error::BadRequest(String::from("bad request")));
+    }
+    Ok(Resp::ok(foo))
 }
 
 #[derive(Deserialize)]
@@ -58,15 +70,16 @@ struct ResParam {
 
 #[axum::debug_handler]
 async fn res(Query(param): Query<ResParam>) -> impl IntoResponse {
-    match param.value {
-        1 => Ok("one".to_string()), // todo: wrapping string to common response structure
-        2 => Ok(read_file()?),
-        _ => Err(Error::NotFound("no one here".to_string()))
-    }
+    let resp = match param.value {
+        1 => "one".to_string(),
+        2 => read_file()?,
+        _ => return Err(Error::NotFound("no one here".to_string())),
+    };
+    Ok(Resp::ok(resp))
 }
 
 fn read_file() -> anyhow::Result<String> {
-    let config = std::fs::read_to_string("Cargo.toml2")
+    let config = std::fs::read_to_string("Cargo.toml")
         .map_err(|e| anyhow!("Read config failed {}", e))?;
     Ok(config)
 }
